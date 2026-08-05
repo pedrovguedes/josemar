@@ -206,6 +206,10 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
   margin-top:22px;max-width:780px;
   font-size:17.5px;line-height:1.66;color:#44506B;
 }
+/* recuo igual ao do texto dentro da faixa azul */
+.porque .olho,.porque h2,.porque p.texto{padding-left:34px;padding-right:34px}
+.porque h2{max-width:934px}
+.porque p.texto{max-width:814px}
 .apoio{
   margin:40px 0;padding:30px 34px;border-radius:18px;
   background:linear-gradient(115deg,var(--azul),var(--azul-medio));
@@ -228,6 +232,7 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
 .apoio h3 em{font-style:normal;color:var(--amarelo)}
 @media(max-width:640px){
   .porque{padding:60px 0}
+  .porque .olho,.porque h2,.porque p.texto{padding-left:22px;padding-right:22px}
   .apoio{padding:24px 22px;margin:30px 0}
 }
 
@@ -349,18 +354,35 @@ const btnPlay = document.getElementById('btnPlay');
 const erro    = document.getElementById('videoerro');
 const player  = document.getElementById('player');
 
+let jaComecou = false;
+
 function tentarTocar(){
   const p = video.play();
   if(p && p.catch) p.catch(() => btnPlay.classList.add('on'));
 }
 
-/* alguns navegadores só liberam o autoplay depois que o vídeo tem dados */
-video.addEventListener('loadeddata', tentarTocar);
-video.addEventListener('canplay', tentarTocar);
-tentarTocar();
+/* o vídeo só começa quando o visitante rola até ele; se sair da tela, pausa */
+const observador = new IntersectionObserver(entradas => {
+  entradas.forEach(e => {
+    if(erro.classList.contains('on')) return;
+    if(e.isIntersecting){
+      jaComecou = true;
+      tentarTocar();
+    } else if(jaComecou){
+      video.pause();
+      btnPlay.classList.remove('on');
+    }
+  });
+}, { threshold: 0.5 });   /* dispara quando metade do vídeo está visível */
+
+observador.observe(player);
 
 video.addEventListener('playing', () => btnPlay.classList.remove('on'));
-video.addEventListener('pause',   () => btnPlay.classList.add('on'));
+video.addEventListener('pause', () => {
+  const r = player.getBoundingClientRect();
+  const visivel = r.top < window.innerHeight * 0.5 && r.bottom > window.innerHeight * 0.5;
+  if(visivel) btnPlay.classList.add('on');
+});
 
 btnPlay.addEventListener('click', () => {
   video.muted = false;
@@ -381,12 +403,6 @@ btnSom.addEventListener('click', () => {
   if(!video.muted) video.play();
   somTxt.textContent = video.muted ? 'Ativar som' : 'Desativar som';
   btnSom.setAttribute('aria-label', video.muted ? 'Ativar som do vídeo' : 'Desativar som do vídeo');
-});
-
-/* se o visitante tocar em qualquer lugar da página, tenta de novo */
-document.addEventListener('click', function primeiroToque(){
-  if(video.paused && !erro.classList.contains('on')) tentarTocar();
-  document.removeEventListener('click', primeiroToque);
 });
 
 const grupos = {

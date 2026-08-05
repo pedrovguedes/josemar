@@ -139,6 +139,29 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
   .wrap{padding:0 18px}
   .cartao{padding:22px 20px}
 }
+/* ---------- vídeo ---------- */
+.videobox{margin:36px 0 40px}
+.player{
+  position:relative;max-width:400px;margin:0 auto;
+  border-radius:18px;overflow:hidden;
+  border:4px solid var(--amarelo);
+  box-shadow:0 20px 50px rgba(11,26,58,.22);
+  background:#000;line-height:0;
+}
+.player video{width:100%;height:auto;display:block}
+.som{
+  position:absolute;right:12px;bottom:12px;z-index:2;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  background:rgba(11,26,58,.82);color:var(--branco);border:0;
+  border-radius:999px;padding:11px 18px;
+  font-family:var(--body);font-size:13.5px;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+  backdrop-filter:blur(6px);transition:background .16s,transform .16s;
+}
+.som:hover{background:var(--azul-medio);transform:translateY(-2px)}
+.som svg{width:17px;height:17px}
+@media(max-width:640px){.videobox{margin:26px 0 30px}.player{max-width:300px}}
+
 /* ---------- tarja final ---------- */
 .tarja{background:var(--azul);color:rgba(255,255,255,.78);padding:26px 0}
 .tarja .wrap{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-size:13.5px;line-height:1.6}
@@ -202,7 +225,7 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
         Movimento oficial
       </span>
 
-      <h1>Faça parte da<span class="am">Tropa do Nikolas</span></h1>
+      <h1>Faça parte da<span class="am">Tropa do Nikolas no RN</span></h1>
 
       <p class="sub">Entre no grupo oficial da sua cidade e acompanhe em primeira mão todas as novidades, ações e informações importantes.</p>
     </div>
@@ -247,14 +270,24 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
     <div class="olho">Por que entrar para a tropa?</div>
     <h2>O RN precisa de uma nova geração</h2>
 
-    <p class="texto">Se você quer fazer parte do time de Nikolas Ferreira no Rio Grande do Norte, apoiando o seu candidato a deputado estadual, Josemar, essa é a sua oportunidade.</p>
+    <p class="texto">O Rio Grande do Norte precisa acordar, e você vai fazer parte da renovação que o nosso Estado precisa. Se você quer fazer parte do time do Nikolas Ferreira no RN, essa é a sua oportunidade.</p>
+
+<div class="videobox">
+    <div class="player">
+      <video id="video" src="video-nikolas.mp4" autoplay muted loop playsinline preload="auto"></video>
+      <button class="som" id="btnSom" aria-label="Ativar som do vídeo">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        <span id="somTxt">Ativar som</span>
+      </button>
+    </div>
+</div>
 
     <div class="apoio">
       <div class="rot">Apoio declarado</div>
-      <h3>Josemar é o candidato a deputado estadual <em>apoiado por Nikolas Ferreira</em> no Rio Grande do Norte.</h3>
+      <h3>Nikolas escolheu <em>Josemar Varela</em> para liderar o time aqui no Rio Grande do Norte.</h3>
     </div>
 
-    <p class="texto">Entre agora no grupo oficial da sua cidade ou região e receba conteúdos exclusivos, convocações, materiais de campanha e participe ativamente da tropa que está crescendo em todo o estado.</p>
+    <p class="texto">Um jovem preparado e que vai enfrentar os problemas mais graves que assolam o nosso Estado. Entre agora no grupo oficial da sua cidade e participe ativamente da tropa que está crescendo em todo o RN.</p>
   </div>
 </section>
 
@@ -273,6 +306,17 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
    natal: ['https://chat.whatsapp.com/AAA','https://chat.whatsapp.com/BBB']
    ================================================================== */
 document.getElementById('ano').textContent = new Date().getFullYear();
+
+/* som do vídeo (o autoplay só funciona sem som; o visitante liga com um toque) */
+const video = document.getElementById('video');
+const btnSom = document.getElementById('btnSom');
+const somTxt = document.getElementById('somTxt');
+btnSom.addEventListener('click', () => {
+  video.muted = !video.muted;
+  if(!video.muted) video.play();
+  somTxt.textContent = video.muted ? 'Ativar som' : 'Desativar som';
+  btnSom.setAttribute('aria-label', video.muted ? 'Ativar som do vídeo' : 'Desativar som do vídeo');
+});
 
 const grupos = {
   natal:          'https://chat.whatsapp.com/XXXX',

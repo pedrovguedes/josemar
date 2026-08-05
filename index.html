@@ -160,6 +160,28 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
 }
 .som:hover{background:var(--azul-medio);transform:translateY(-2px)}
 .som svg{width:17px;height:17px}
+.som.escondido{display:none}
+.play{
+  position:absolute;inset:0;z-index:3;width:100%;height:100%;
+  display:none;place-items:center;cursor:pointer;
+  background:rgba(11,26,58,.42);border:0;color:var(--branco);
+}
+.play.on{display:grid}
+.play svg{
+  width:74px;height:74px;padding:18px;border-radius:50%;
+  background:var(--amarelo);color:var(--azul);
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+.videoerro{
+  display:none;position:absolute;inset:0;z-index:4;
+  place-content:center;text-align:center;padding:26px;
+  background:var(--azul);color:var(--branco);
+  font-size:15px;line-height:1.6;font-weight:600;
+}
+.videoerro.on{display:grid}
+.videoerro span{display:block;margin-top:10px;font-weight:400;font-size:13.5px;color:rgba(255,255,255,.78)}
+.videoerro b{color:var(--amarelo)}
+.player.semvideo{aspect-ratio:9/16}
 @media(max-width:640px){.videobox{margin:26px 0 30px}.player{max-width:300px}}
 
 /* ---------- tarja final ---------- */
@@ -273,12 +295,24 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
     <p class="texto">O Rio Grande do Norte precisa acordar, e você vai fazer parte da renovação que o nosso Estado precisa. Se você quer fazer parte do time do Nikolas Ferreira no RN, essa é a sua oportunidade.</p>
 
 <div class="videobox">
-    <div class="player">
-      <video id="video" src="video-nikolas.mp4" autoplay muted loop playsinline preload="auto"></video>
-      <button class="som" id="btnSom" aria-label="Ativar som do vídeo">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-        <span id="somTxt">Ativar som</span>
-      </button>
+      <div class="player" id="player">
+        <video id="video" src="video-nikolas.mp4" muted loop playsinline preload="auto"
+               poster="" controlslist="nodownload"></video>
+
+        <button class="play" id="btnPlay" aria-label="Reproduzir vídeo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+
+        <button class="som" id="btnSom" aria-label="Ativar som do vídeo">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          <span id="somTxt">Ativar som</span>
+        </button>
+
+        <div class="videoerro" id="videoerro">
+          O vídeo não foi encontrado.<br>
+          <span>Envie o arquivo <b>video-nikolas.mp4</b> para a mesma pasta do site.</span>
+        </div>
+      </div>
     </div>
 </div>
 
@@ -307,15 +341,52 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
    ================================================================== */
 document.getElementById('ano').textContent = new Date().getFullYear();
 
-/* som do vídeo (o autoplay só funciona sem som; o visitante liga com um toque) */
-const video = document.getElementById('video');
-const btnSom = document.getElementById('btnSom');
-const somTxt = document.getElementById('somTxt');
+/* ---------- player ---------- */
+const video   = document.getElementById('video');
+const btnSom  = document.getElementById('btnSom');
+const somTxt  = document.getElementById('somTxt');
+const btnPlay = document.getElementById('btnPlay');
+const erro    = document.getElementById('videoerro');
+const player  = document.getElementById('player');
+
+function tentarTocar(){
+  const p = video.play();
+  if(p && p.catch) p.catch(() => btnPlay.classList.add('on'));
+}
+
+/* alguns navegadores só liberam o autoplay depois que o vídeo tem dados */
+video.addEventListener('loadeddata', tentarTocar);
+video.addEventListener('canplay', tentarTocar);
+tentarTocar();
+
+video.addEventListener('playing', () => btnPlay.classList.remove('on'));
+video.addEventListener('pause',   () => btnPlay.classList.add('on'));
+
+btnPlay.addEventListener('click', () => {
+  video.muted = false;
+  somTxt.textContent = 'Desativar som';
+  video.play();
+});
+
+/* arquivo ausente ou formato não suportado */
+video.addEventListener('error', () => {
+  erro.classList.add('on');
+  player.classList.add('semvideo');
+  btnPlay.classList.remove('on');
+  btnSom.classList.add('escondido');
+});
+
 btnSom.addEventListener('click', () => {
   video.muted = !video.muted;
   if(!video.muted) video.play();
   somTxt.textContent = video.muted ? 'Ativar som' : 'Desativar som';
   btnSom.setAttribute('aria-label', video.muted ? 'Ativar som do vídeo' : 'Desativar som do vídeo');
+});
+
+/* se o visitante tocar em qualquer lugar da página, tenta de novo */
+document.addEventListener('click', function primeiroToque(){
+  if(video.paused && !erro.classList.contains('on')) tentarTocar();
+  document.removeEventListener('click', primeiroToque);
 });
 
 const grupos = {

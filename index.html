@@ -9,7 +9,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-
 /* ==================================================================
    TROPA DO NIKOLAS NO RN — arquivo único
    >>> LINKS DOS GRUPOS: procure por  const grupos  no fim do arquivo
@@ -240,6 +239,20 @@ input:focus,select:focus{outline:none;border-color:var(--amarelo);box-shadow:0 0
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 :focus-visible{outline:3px solid var(--amarelo);outline-offset:3px;border-radius:8px}
 </style>
+
+<!-- ================= META PIXEL — troque 1407508394690710 ================= -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1407508394690710');
+fbq('track','PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1407508394690710&ev=PageView&noscript=1" alt=""/></noscript>
+<!-- =================================================================== -->
 </head>
 <body>
 
@@ -498,10 +511,56 @@ btn.addEventListener('click', () => {
     return;
   }
 
+  /* --- Meta: pixel + API de Conversões com o MESMO event_id (deduplicação) --- */
+  registrarLead(select.value, escolha.rotulo);
+
   box.innerHTML = 'Abrindo o grupo de <b>' + select.value + '</b>…';
   box.classList.add('on');
   window.open(link, '_blank', 'noopener');
 });
+
+/* ---------- Meta: pixel do navegador + API de Conversões ---------- */
+function lerCookie(nome){
+  const m = document.cookie.match('(^|;)\\s*' + nome + '\\s*=\\s*([^;]+)');
+  return m ? m.pop() : null;
+}
+
+function novoEventId(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'lead-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+}
+
+function registrarLead(cidade, regiao){
+  const eventId = novoEventId();
+
+  /* lado do navegador */
+  try {
+    if(window.fbq) fbq('track', 'Lead',
+      { content_name: cidade, content_category: regiao },
+      { eventID: eventId });
+  } catch(e){ console.error('Pixel:', e); }
+
+  /* lado do servidor — recupera o que o navegador perde (bloqueadores, iOS) */
+  try {
+    const corpo = JSON.stringify({
+      event_id: eventId,
+      cidade: cidade,
+      regiao: regiao,
+      event_source_url: location.href,
+      fbp: lerCookie('_fbp'),
+      fbc: lerCookie('_fbc')
+    });
+
+    /* sendBeacon sobrevive à troca de aba para o WhatsApp */
+    if(navigator.sendBeacon){
+      navigator.sendBeacon('/api/lead', new Blob([corpo], {type:'application/json'}));
+    } else {
+      fetch('/api/lead', {method:'POST', headers:{'Content-Type':'application/json'},
+                          body: corpo, keepalive: true}).catch(()=>{});
+    }
+  } catch(e){ console.error('CAPI:', e); }
+}
+
 
 /* ---------- player (isolado: se falhar, não derruba o formulário) ---------- */
 try {

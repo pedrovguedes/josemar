@@ -5,6 +5,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  
 
   const PIXEL_ID = process.env.META_PIXEL_ID;
   const TOKEN    = process.env.META_CAPI_TOKEN;
